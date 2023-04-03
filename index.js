@@ -101,6 +101,19 @@ class Invader {
             this.position.y += velocity.y
         }
     }
+
+    shoot(invaderProjectiles) {
+        invaderProjectiles.push(new InvaderProjectile({
+            position: {
+                x: this.position.x + this.width/2,
+                y: this.position.y + this.height
+            },
+            velocity: {
+                x: 0,
+                y: 5
+            }
+        }))
+    }
 }
 
 class Projectile {
@@ -117,6 +130,27 @@ class Projectile {
         c.fillStyle = 'red'
         c.fill()
         c.closePath()
+    }
+
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+    }
+}
+
+class InvaderProjectile {
+    constructor({position, velocity}) {
+        this.position = position
+        this.velocity = velocity
+
+        this.width = 3
+        this.height = 10
+    }
+
+    draw() {
+        c.fillStyle = 'white'
+        c.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
 
     update() {
@@ -168,6 +202,7 @@ class Grid {
 const player = new Player()
 const projectiles = []
 const grids = []
+const invaderProjectiles  = []
 const keys = {
     a: {
         pressed: false
@@ -182,24 +217,45 @@ const keys = {
 
 let frames = 0
 let randomInterval = Math.floor(Math.random()*500) + 500
-console.log(randomInterval)
+
+
 function animate() {
     requestAnimationFrame(animate)
     c.fillStyle = 'black'
     c.fillRect(0, 0, canvas.width, canvas.height)
     player.update()
+
+    invaderProjectiles.forEach((invaderProjectile,  index)=> {
+        if (invaderProjectile.position.y + invaderProjectile.height >= canvas.height) {
+            setTimeout(() => {
+                invaderProjectiles.splice(index, 1)
+            }, 0)
+        } else {
+            invaderProjectile.update()
+        }
+
+        if(invaderProjectile.position.y + invaderProjectile.height >= player.position.y &&
+            invaderProjectile.position.x + invaderProjectile.width >= player.position.x && 
+            invaderProjectile.position.x <= player.position.x + player.width) {
+            console.log('You lose')
+        }
+    })
     projectiles.forEach((projectile, index) => {
         if(projectile.position.y+projectile.radius <= 0) {
             setTimeout(() => {
                 projectiles.splice(index, 1)
-            })
+            }, 0)
         } else {
             projectile.update()
         }
     })
 
-    grids.forEach(grid => {
+    grids.forEach((grid, gridIndex) => {
         grid.update()
+        //spawn projectiles
+        if(frames % 100 === 0 && grid.invaders.length > 0) {
+            grid.invaders[Math.floor(Math.random() * grid.invaders.length)].shoot(invaderProjectiles)
+        }
         grid.invaders.forEach((invader, i) => {
             invader.update({ velocity: grid.velocity})
 
@@ -227,6 +283,8 @@ function animate() {
                                 grid.width = lastInvader.position.x - firstInvader.position.x + lastInvader.width
 
                                 grid.position.x = firstInvader.position.x
+                            } else {
+                                grids.splice(gridIndex, 1)
                             }
                         }
                     }, 0)
@@ -246,8 +304,7 @@ function animate() {
         player.rotation = 0
     }
 
-    // console.log(frames)
-    //spawn frames
+    //spawn enemies
     if (frames % randomInterval === 0) {
         grids.push(new Grid())
         randomInterval = Math.floor(Math.random()*500) + 500
@@ -261,15 +318,12 @@ animate()
 window.addEventListener('keydown', ({key}) => {
     switch (key) {
         case 'a':
-            // console.log('left')
             keys.a.pressed = true
             break;
         case 'd':
-            // console.log('right')
             keys.d.pressed = true
             break;
         case ' ':
-            // console.log('space')
             projectiles.push(new Projectile({
                 position: {
                     x: player.position.x + player.width / 2,
@@ -280,7 +334,6 @@ window.addEventListener('keydown', ({key}) => {
                     y:-10
                 }
             }))
-            // console.log(projectiles)
             break;
     }
 })
@@ -288,15 +341,12 @@ window.addEventListener('keydown', ({key}) => {
 window.addEventListener('keyup', ({key}) => {
     switch (key) {
         case 'a':
-            // console.log('left')
             keys.a.pressed = false
             break;
         case 'd':
-            // console.log('right')
             keys.d.pressed = false
             break;
         case ' ':
-            // console.log('space')
             break;
     }
 })
