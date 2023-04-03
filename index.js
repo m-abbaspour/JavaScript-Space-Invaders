@@ -1,8 +1,9 @@
+const scoreEL = document.querySelector('#scoreEL')
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 
-canvas.width =  window.innerWidth
-canvas.height =  innerHeight
+canvas.width =  1024
+canvas.height =  576
 
 class Player {
     constructor() {
@@ -257,6 +258,7 @@ let game = {
     over: false, 
     active: true
 }
+let score = 0
 
 for (let i = 0; i < 100; i++) {
     particles.push(new Particle({
@@ -313,7 +315,6 @@ function animate() {
         }
     })
 
-    console.log(particles)
     invaderProjectiles.forEach((invaderProjectile,  index)=> {
         if (invaderProjectile.position.y + invaderProjectile.height >= canvas.height) {
             setTimeout(() => {
@@ -380,7 +381,10 @@ function animate() {
                             (projectile2) => projectile2 === projectile
                         )
                         // remove invader and projectile
-                        if(invaderFound && projectileFound){
+                        if(invaderFound && projectileFound) {
+                            score += 100
+                            console.log(score)
+                            scoreEL.innerHTML = score
                             createParticles({
                                 object: invader,
                                 fades: true
